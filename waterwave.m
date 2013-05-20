@@ -1,4 +1,4 @@
-function []=waterwave()
+function [t,s]=waterwave()
 % WATERWAVE   2D Shallow Water Model
 % Lax-Wendroff finite difference method.
 
@@ -41,62 +41,60 @@ for i=1:n
                 Ah(i,j,2)=Ah(i,j,2)/acum;
                 Ah(i,j,4)=Ah(i,j,4)/acum;
                 Ah(i,j,5)=Ah(i,j,5)/acum;
+            else
+                Ah(i,j,3)=1;
             end
             
-            if (borde(i,j+1)==0)||(borde(i+2,j+1)==0)
-                acum=0;
-                if borde(i,j+1)==0
-                    Au(i,j,2)=-1;
-                    acum=acum+1;
-                end
-                if borde(i+2,j+1)==0
-                    Au(i,j,4)=-1;
-                    acum=acum+1;
-                end
+            acum=0;
+            if borde(i,j+1)==0
+                Au(i,j,2)=-1;
+                acum=acum+1;
+            end
+            if borde(i+2,j+1)==0
+                Au(i,j,4)=-1;
+                acum=acum+1;
+            end
+            if borde(i+1,j)==0
+                Au(i,j,1)=1;
+                acum=acum+1;
+            end
+            if borde(i+1,j+2)==0
+                Au(i,j,5)=1;
+                acum=acum+1;
+            end
+            if acum~=0
                 Au(i,j,2)=Au(i,j,2)/acum;
                 Au(i,j,4)=Au(i,j,4)/acum;
+                Au(i,j,1)=Au(i,j,1)/acum;
+                Au(i,j,5)=Au(i,j,5)/acum;
             else
-                acum=0;
-                if borde(i+1,j)==0
-                    Au(i,j,1)=1;
-                    acum=acum+1;
-                end
-                if borde(i+1,j+2)==0
-                    Au(i,j,5)=1;
-                    acum=acum+1;
-                end
-                if acum~=0
-                    Au(i,j,1)=Au(i,j,1)/acum;
-                    Au(i,j,5)=Au(i,j,5)/acum;
-                end
+                Au(i,j,3)=1;
             end
             
-            if (borde(i+1,j)==0)||(borde(i+1,j+2)==0)
-                acum=0;
-                if borde(i+1,j)==0
-                    Av(i,j,1)=-1;
-                    acum=acum+1;
-                end
-                if borde(i+1,j+2)==0
-                    Av(i,j,5)=-1;
-                    acum=acum+1;
-                end
+            acum=0;
+            if borde(i+1,j)==0
+                Av(i,j,1)=-1;
+                acum=acum+1;
+            end
+            if borde(i+1,j+2)==0
+                Av(i,j,5)=-1;
+                acum=acum+1;
+            end
+            if borde(i,j+1)==0
+                Av(i,j,2)=1;
+                acum=acum+1;
+            end
+            if borde(i+2,j+1)==0
+                Av(i,j,4)=1;
+                acum=acum+1;
+            end
+            if acum~=0
                 Av(i,j,1)=Av(i,j,1)/acum;
                 Av(i,j,5)=Av(i,j,5)/acum;
+                Av(i,j,2)=Av(i,j,2)/acum;
+                Av(i,j,4)=Av(i,j,4)/acum;
             else
-                acum=0;
-                if borde(i,j+1)==0
-                    Av(i,j,2)=1;
-                    acum=acum+1;
-                end
-                if borde(i+2,j+1)==0
-                    Av(i,j,4)=1;
-                    acum=acum+1;
-                end
-                if acum~=0
-                    Av(i,j,2)=Av(i,j,2)/acum;
-                    Av(i,j,4)=Av(i,j,4)/acum;
-                end
+                Av(i,j,3)=1;
             end
         end
     end
@@ -104,7 +102,12 @@ end
 
 % Initialize graphics
 
-[surfplot,topography,boundary,top,start,stop] = initgraphics(n);
+[surfplot,topography,boundary,top,start,stop] = initgraphics(n,dx);
+
+% Results
+
+t = [];
+s = [];
 
 % Outer loop, restarts.
 
@@ -162,6 +165,10 @@ while get(stop,'value') == 0
                             (V(i+1,j).^2./H(i+1,j) + g/2*H(i+1,j).^2))...
                             -dt*nn^2*(V(i+1,j+1)+V(i+1,j)).*sqrt((U(i+1,j+1)+U(i+1,j)).^2+(V(i+1,j+1)+V(i+1,j)).^2)./(8*((H(i+1,j+1)+H(i+1,j))/2).^(10/3))...
                             -dt*g*(H(i+1,j+1)+H(i+1,j)).*(Z(i+1,j+1)-Z(i+1,j))/(4*dy);
+                        
+       %threshhold
+       Hx(Hx<0.1)=0.1;
+       Hy(Hy<0.1)=0.1;
    
        % Second half step
        i = 2:n+1;
@@ -193,7 +200,7 @@ while get(stop,'value') == 0
                          -Sfy-Soy;
 
         %boundary conditions
-       H(:,1) = 1+0.3*sin(2*pi*0.3*nstep*dt+2*pi*2*(1:n+2)/(n+2));      U(:,1) = U(:,2);       V(:,1) = V(:,2);
+       H(:,1) = 1+0.3*sin(2*pi*4*nstep*dt+2*pi*0.5*(1:n+2)*dx);      U(:,1) = U(:,2);       V(:,1) = V(:,2);
        H(:,n+2) = H(:,n+1);  U(:,n+2) = U(:,n+1);   V(:,n+2) = -V(:,n+1);
        H(1,:) = H(n+1,:);      U(1,:) = U(n+1,:);      V(1,:) = V(n+1,:);
        H(n+2,:) = H(2,:);  U(n+2,:) = U(2,:);  V(n+2,:) = V(2,:);
@@ -201,11 +208,17 @@ while get(stop,'value') == 0
        H(2:n+1,2:n+1)=Ah(:,:,1).*(H(2:n+1,1:n)-1)+Ah(:,:,2).*(H(1:n,2:n+1)-1)+Ah(:,:,3).*(H(2:n+1,2:n+1)-1)+Ah(:,:,4).*(H(3:n+2,2:n+1)-1)+Ah(:,:,5).*(H(2:n+1,3:n+2)-1)+1;
        U(2:n+1,2:n+1)=Au(:,:,1).*U(2:n+1,1:n)+Au(:,:,2).*U(1:n,2:n+1)+Au(:,:,3).*U(2:n+1,2:n+1)+Au(:,:,4).*U(3:n+2,2:n+1)+Au(:,:,5).*U(2:n+1,3:n+2);
        V(2:n+1,2:n+1)=Av(:,:,1).*V(2:n+1,1:n)+Av(:,:,2).*V(1:n,2:n+1)+Av(:,:,3).*V(2:n+1,2:n+1)+Av(:,:,4).*V(3:n+2,2:n+1)+Av(:,:,5).*V(2:n+1,3:n+2);
-
+       
+       %threshhold
+       H(H<0.1)=0.1;
+       
+       %Add result
+       t=[t nstep*dt];
+       s=[s std(H(:,65))*sqrt((n+2)*dx)];
+       
        % Update plot
        if mod(nstep,nplotstep) == 0
           C = abs(U(i,j)) + abs(V(i,j));  % Color shows momemtum
-          t = nstep*dt;
           set(surfplot,'zdata',H(i,j)+Z(i,j),'cdata',C);
           luz=zeros(n,n,3);
           luz(:,:,1)=0.2*abs(U(i,j));
@@ -217,7 +230,7 @@ while get(stop,'value') == 0
           colorborde(:,:,2)=0.3*borde(i,j);
           colorborde(:,:,3)=0.3*borde(i,j);
           set(boundary,'zdata',2*borde(i,j),'cdata',colorborde);
-          set(top,'string',sprintf('t = %6.2f',t))
+          set(top,'string',sprintf('t = %6.2f',nstep*dt))
           drawnow
        end
       
@@ -230,7 +243,7 @@ end
 
 % ------------------------------------
 
-function [surfplot,topography,boundary,top,start,stop] = initgraphics(n);
+function [surfplot,topography,boundary,top,start,stop] = initgraphics(n,dx);
 % INITGRAPHICS  Initialize graphics for waterwave.
 % [surfplot,top,start,stop] = initgraphics(n)
 % returns handles to a surface plot, its title, and two uicontrol toggles.
@@ -238,13 +251,13 @@ function [surfplot,topography,boundary,top,start,stop] = initgraphics(n);
    clf
    shg
    set(gcf,'numbertitle','off','name','Shallow_water')
-   x = (0:n-1)/(n-1);
+   x = (1:n)*dx;
    surfplot = surf(x,x,ones(n,n),zeros(n,n));
    hold on;
    topography = surf(x,x,zeros(n,n),zeros(n,n));
    boundary = surf(x,x,zeros(n,n),zeros(n,n));
    grid off
-   axis([0 1 0 1 -1 3])
+   axis([0 n*dx 0 n*dx -1 4])
    caxis([-1 1])
    shading interp
    c = (1:64)'/64;
