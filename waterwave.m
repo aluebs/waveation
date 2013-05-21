@@ -1,4 +1,4 @@
-function [t,s]=waterwave()
+function [t,s,M]=waterwave()
 % WATERWAVE   2D Shallow Water Model
 % Lax-Wendroff finite difference method.
 
@@ -106,8 +106,9 @@ end
 
 % Results
 
-t = [];
-s = [];
+t=[];
+s=[];
+M=[];
 
 % Outer loop, restarts.
 
@@ -232,6 +233,7 @@ while get(stop,'value') == 0
           set(boundary,'zdata',2*borde(i,j),'cdata',colorborde);
           set(top,'string',sprintf('t = %6.2f',nstep*dt))
           drawnow
+          M=[M getframe];
        end
       
        if all(all(isnan(H))), break, end  % Unstable, restart
@@ -253,6 +255,7 @@ function [surfplot,topography,boundary,top,start,stop] = initgraphics(n,dx);
    set(gcf,'numbertitle','off','name','Shallow_water')
    x = (1:n)*dx;
    surfplot = surf(x,x,ones(n,n),zeros(n,n));
+   axis off
    hold on;
    topography = surf(x,x,zeros(n,n),zeros(n,n));
    boundary = surf(x,x,zeros(n,n),zeros(n,n));
