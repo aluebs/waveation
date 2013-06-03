@@ -215,7 +215,7 @@ while get(stop,'value') == 0
        
        %Add result
        t=[t nstep*dt];
-       s=[s std(H(:,65))*sqrt((n+2)*dx)];
+       s=[s std(H(:,92))*sqrt((n+2)*dx)];
        
        % Update plot
        if mod(nstep,nplotstep) == 0
@@ -252,7 +252,7 @@ function [surfplot,topography,boundary,top,start,stop] = initgraphics(n,dx);
 
    clf
    shg
-   set(gcf,'numbertitle','off','name','Shallow_water')
+   set(gcf,'numbertitle','off','name','Shallow_water','Position',[0 0 800 600])
    x = (1:n)*dx;
    surfplot = surf(x,x,ones(n,n),zeros(n,n));
    axis off
