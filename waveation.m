@@ -1,12 +1,74 @@
-function [t,s,M]=waterwave()
-% WATERWAVE   2D Shallow Water Model
+function [t,s,M]=waveation()
+% 2D Shallow Water Model
 % Lax-Wendroff finite difference method.
+% [t,s,M]=waveation()
+% t = time intervals
+% s = energy of the wave at certain distance for each time interval
+% M = frames of the simulation
 
 % Parameters
 
-load parametros
+n=100;                  % grid size
+g=9.8;                 % gravitational constant
+dt=0.001;               % hardwired timestep
+dx=0.1;                 % space step
+dy=0.1;
+nplotstep=10;           % plot interval
+nn=0.5;                 % viscous friction factor
 
-%calculo condiiones de contorno
+x=1:n+2;
+y=1:n+2;
+[yy,xx]=meshgrid(y,x);
+
+%topography
+
+%almost flat
+
+Z=yy/(10*(n+2));
+
+% steep coast
+
+% Z=0.9*(yy-(n-8))/10;
+% Z(Z<0)=0;
+
+%boundary conditions
+
+%simple
+
+borde=zeros(n+2,n+2);
+
+%pilars coast
+
+% r=2;
+% borde=false(n+2,n+2);
+% for i=2:4:n+1
+%     borde=borde|((xx-i).^2+(yy-99).^2<r^2);
+% end
+% for i=2:5:n+1
+%     borde=borde|((xx-i).^2+(yy-93).^2<r^2);
+% end
+% for i=2:6:n+1
+%     borde=borde|((xx-i).^2+(yy-87).^2<r^2);
+% end
+% for i=2:8:n+1
+%     borde=borde|((xx-i).^2+(yy-81).^2<r^2);
+% end
+% borde=1*borde;
+
+%pilars separated from the coast
+
+% r=2;
+% borde=false(n+2,n+2);
+% for i=2:5:n+1
+%     borde=borde|((xx-i).^2+(yy-79).^2<r^2);
+% end
+% for i=2:6:n+1
+%     borde=borde|((xx-i).^2+(yy-73).^2<r^2);
+% end
+% for i=2:8:n+1
+%     borde=borde|((xx-i).^2+(yy-67).^2<r^2);
+% end
+% borde=1*borde;
 
 Ah=zeros(n,n,5);
 Au=zeros(n,n,5);
